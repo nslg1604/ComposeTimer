@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">TimerApp</string>
+    <string name="enter_data">Please enter time</string>
+    <string name="enter_value">Time</string>
+    <string name="run">Run</string>
+    <string name="pause">Pause</string>
+    <string name="stop">Stop</string>
+</resources>
