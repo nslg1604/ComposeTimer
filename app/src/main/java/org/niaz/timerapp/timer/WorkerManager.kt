@@ -5,9 +5,8 @@ import kotlinx.coroutines.flow.SharedFlow
 import org.niaz.timerapp.diff.MyLogger
 
 object WorkerManager {
-    const val COUNT_KEY = "COUNT_KEY"
+    @Volatile var started = false
     @Volatile var running = false
-    @Volatile var stop = false
     private val _timerUpdates = MutableSharedFlow<Int>()
     val timerUpdates: SharedFlow<Int> = _timerUpdates
 

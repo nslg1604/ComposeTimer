@@ -12,7 +12,6 @@ object MyPrefs {
      * Write to Shared Preferences
      */
     fun write(name: String?, data: Int) {
-        MyLogger.d("MyPrefs - write key=" + name)
         val editor = MyApp.getInstance().getSharedPreferences(
             PREFS_MAIN, Context.MODE_PRIVATE)?.edit()
         editor?.putInt(name, data)
@@ -25,7 +24,6 @@ object MyPrefs {
     fun read(name: String): Int {
         val prefs = MyApp.getInstance().getSharedPreferences(
             PREFS_MAIN, Context.MODE_PRIVATE)
-        MyLogger.d("MyPrefs - read prefs=" + prefs)
         val value = prefs?.getInt(name, 0) ?: return 0
         return value
     }

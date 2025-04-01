@@ -13,10 +13,8 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,21 +32,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import dagger.hilt.EntryPoint
 import dagger.hilt.android.AndroidEntryPoint
 import org.niaz.timerapp.R
 import org.niaz.timerapp.diff.MyLogger
-import org.niaz.timerapp.diff.MyPrefs
 import org.niaz.timerapp.timer.WorkerManager
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val viewModel: MainViewModel by viewModels()
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        MyLogger.d("MainActivity restored=" + MyPrefs.read(MyPrefs.PREFS_VALUE))
+
+        viewModel.initCurrentCount()
+
         setContent {
             AskNotificationPermission()
             EditScreen(
@@ -103,7 +100,9 @@ class MainActivity : ComponentActivity() {
         OutlinedTextField(
             value = count,
             onValueChange = { newValue ->
-                onCountChange(newValue)
+                if (newValue.all { it.isDigit() }) {
+                    onCountChange(newValue)
+                }
             },
             label = {
                 Text(
@@ -151,9 +150,11 @@ class MainActivity : ComponentActivity() {
                     .clip(RoundedCornerShape(8.dp))
                     .background(Color.White)
                     .clickable {
-                        MyLogger.d("click Run")
-                        viewModel.startWorker(count)
-                        WorkerManager.running = true
+                        MyLogger.d("MainActivity - click Run")
+                        val countInt = count.toIntOrNull() ?: 0
+                        if (countInt > 0) {
+                            viewModel.startWorker(countInt)
+                        }
                     },
                 contentAlignment = Alignment.Center
             ) {
@@ -166,8 +167,6 @@ class MainActivity : ComponentActivity() {
 
             Spacer(modifier = Modifier.width(10.dp))
 
-            MyLogger.d("MainActivity running=${WorkerManager.running}")
-
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -175,9 +174,14 @@ class MainActivity : ComponentActivity() {
                     .clip(RoundedCornerShape(8.dp))
                     .background(Color.White)
                     .clickable {
-                        pauseState = !pauseState
-                        WorkerManager.running = pauseState
-                        MyLogger.d("MainActivity after click=${WorkerManager.running}")
+                        if (WorkerManager.started) {
+                            pauseState = !pauseState
+                            WorkerManager.running = pauseState
+                            MyLogger.d("MainActivity after click pause=${WorkerManager.running}")
+                        }
+                        else {
+                            MyLogger.d("MainActivity pause - ignore")
+                        }
                     },
                 contentAlignment = Alignment.Center
             ) {
@@ -212,11 +216,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onPause() {
-        super.onPause()
-        val currentCount = viewModel.timerValue.value
-        MyPrefs.write(MyPrefs.PREFS_VALUE, currentCount)
-    }
+//    override fun onPause() {
+//        super.onPause()
+//        val currentCount = viewModel.timerValue.value
+//        MyPrefs.write(MyPrefs.PREFS_VALUE, currentCount)
+//    }
 
 }
 

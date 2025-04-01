@@ -1,6 +1,7 @@
 package org.niaz.timerapp.ui.activities
 
 import android.content.Context
+import android.view.View
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -16,6 +17,7 @@ import kotlinx.coroutines.launch
 import org.niaz.timerapp.R
 import org.niaz.timerapp.diff.MyLogger
 import org.niaz.timerapp.diff.MyNotification
+import org.niaz.timerapp.diff.MyPrefs
 import org.niaz.timerapp.timer.MyWorker
 import org.niaz.timerapp.timer.WorkerManager
 import java.util.UUID
@@ -28,6 +30,7 @@ class MainViewModel @Inject constructor
     private val workManager = WorkManager.getInstance(context)
     private var workerId: UUID? = null
 
+//    private val _timerValue = MutableStateFlow(MyPrefs.read(MyPrefs.PREFS_VALUE))
     private val _timerValue = MutableStateFlow(0)
     val timerValue: StateFlow<Int> = _timerValue.asStateFlow()
     @Inject lateinit var myNotification: MyNotification
@@ -47,18 +50,12 @@ class MainViewModel @Inject constructor
         }
     }
 
-    fun startWorker(count: String) {
-        MyLogger.d("MainViewModel - startWorker with count: $count")
+    fun startWorker(count: Int) {
+        MyLogger.d("MainViewModel - startWorker count=" + count)
         myNotification.createNotificationChannel()
-        WorkerManager.stop = false
-        WorkerManager.running = true
 
-        val inputData = workDataOf(
-            WorkerManager.COUNT_KEY to count
-        )
-
+        MyPrefs.write(MyPrefs.PREFS_VALUE, count)
         val workRequest = OneTimeWorkRequestBuilder<MyWorker>()
-            .setInputData(inputData)
             .build()
 
         workerId = workRequest.id
@@ -70,6 +67,15 @@ class MainViewModel @Inject constructor
         workerId?.let { id ->
             workManager.cancelWorkById(id)
         }
-        WorkerManager.stop = true
+        WorkerManager.started = false
+    }
+
+    fun initCurrentCount(){
+        var currentCount = MyPrefs.read(MyPrefs.PREFS_VALUE)
+        MyLogger.d("MainViewModel - initCurrentCount - currentCount=" + currentCount)
+        if (currentCount > 0) {
+            startWorker(currentCount)
+        }
+
     }
 }

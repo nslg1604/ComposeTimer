@@ -10,6 +10,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.niaz.timerapp.diff.MyLogger
+import org.niaz.timerapp.diff.MyPrefs
 import kotlin.coroutines.CoroutineContext
 
 class MyWorker(context: Context, workerParams: WorkerParameters) :
@@ -22,27 +23,28 @@ class MyWorker(context: Context, workerParams: WorkerParameters) :
     private var timerJob: Job? = null
 
     override fun doWork(): Result {
-        MyLogger.d("MyWorker - doWork")
-
-        val count = inputData.getString(WorkerManager.COUNT_KEY)
-        MyLogger.d("MyWorker - received count: $count")
-
-        if (count == null){
-            return Result.failure()
+        var currentCount = MyPrefs.read(MyPrefs.PREFS_VALUE)
+        MyLogger.d("MyWorker - doWork currentCount=" + currentCount)
+        if (currentCount > 0){
+            WorkerManager.started = true
+            WorkerManager.running = true
         }
-        var currentCount = count.toInt()
+
         timerJob = coroutineScope.launch {
             MyLogger.d("MyWorker - doWork - isActive=" + isActive + " currentCount=" + currentCount)
             while (isActive && currentCount > 0) {
-                if (WorkerManager.stop){
+                if (!WorkerManager.started){
                     MyLogger.d("MyWorker - doWork - STOP")
                     currentCount = 0
+                    WorkerManager.sendTimerUpdate(currentCount)
+                    MyPrefs.write(MyPrefs.PREFS_VALUE, currentCount)
                 }
                 else if (WorkerManager.running){
                     delay(1000)
                     currentCount -= 1
+                    WorkerManager.sendTimerUpdate(currentCount)
+                    MyPrefs.write(MyPrefs.PREFS_VALUE, currentCount)
                 }
-                WorkerManager.sendTimerUpdate(currentCount)
             }
         }
 
