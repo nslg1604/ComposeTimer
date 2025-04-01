@@ -38,14 +38,17 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.android.AndroidEntryPoint
 import org.niaz.timerapp.R
 import org.niaz.timerapp.diff.MyLogger
+import org.niaz.timerapp.diff.MyPrefs
 import org.niaz.timerapp.timer.WorkerManager
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val viewModel: MainViewModel by viewModels()
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        MyLogger.d("MainActivity restored=" + MyPrefs.read(MyPrefs.PREFS_VALUE))
         setContent {
             AskNotificationPermission()
             EditScreen(
@@ -82,7 +85,7 @@ class MainActivity : ComponentActivity() {
 
             Text(
                 text = "Timer: $timerValue seconds",
-                fontSize = 24.sp,
+                fontSize = 30.sp,
                 modifier = Modifier.padding(16.dp)
             )
 
@@ -97,29 +100,29 @@ class MainActivity : ComponentActivity() {
             focusRequester.requestFocus()
         }
 
-            OutlinedTextField(
-                value = count,
-                onValueChange = { newValue ->
-                    onCountChange(newValue)
-                },
-                label = {
-                    Text(
-                        text = stringResource(R.string.enter_value)
-                    )
-                },
-                textStyle = TextStyle(
-                    fontSize = 24.sp,
-                    color = Color.Black
-                ),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    keyboardType = KeyboardType.Number
-                ),
-                modifier = Modifier
-                    .focusRequester(focusRequester)
-                    .fillMaxWidth()
-                    .padding(8.dp),
-            )
+        OutlinedTextField(
+            value = count,
+            onValueChange = { newValue ->
+                onCountChange(newValue)
+            },
+            label = {
+                Text(
+                    text = stringResource(R.string.enter_value)
+                )
+            },
+            textStyle = TextStyle(
+                fontSize = 24.sp,
+                color = Color.Black
+            ),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Number
+            ),
+            modifier = Modifier
+                .focusRequester(focusRequester)
+                .fillMaxWidth()
+                .padding(8.dp),
+        )
     }
 
 
@@ -128,6 +131,8 @@ class MainActivity : ComponentActivity() {
         viewModel: MainViewModel,
         count: String
     ) {
+        var pauseState by remember { mutableStateOf(true) }
+
         Spacer(modifier = Modifier.height(10.dp))
 
         Row(
@@ -153,13 +158,15 @@ class MainActivity : ComponentActivity() {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = stringResource(R.string.run),
+                    text = stringResource(R.string.start),
                     fontSize = 26.sp,
                     textAlign = TextAlign.Center
                 )
             }
 
             Spacer(modifier = Modifier.width(10.dp))
+
+            MyLogger.d("MainActivity running=${WorkerManager.running}")
 
             Box(
                 modifier = Modifier
@@ -168,12 +175,14 @@ class MainActivity : ComponentActivity() {
                     .clip(RoundedCornerShape(8.dp))
                     .background(Color.White)
                     .clickable {
-                        WorkerManager.running = false
+                        pauseState = !pauseState
+                        WorkerManager.running = pauseState
+                        MyLogger.d("MainActivity after click=${WorkerManager.running}")
                     },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = stringResource(R.string.pause),
+                    text = stringResource(id = if (pauseState) R.string.pause else R.string.resume),
                     fontSize = 26.sp,
                     textAlign = TextAlign.Center
                 )
@@ -193,7 +202,7 @@ class MainActivity : ComponentActivity() {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = stringResource(R.string.stop),
+                    text = stringResource(R.string.reset),
                     fontSize = 26.sp,
                     textAlign = TextAlign.Center
                 )
@@ -201,8 +210,14 @@ class MainActivity : ComponentActivity() {
 
 
         }
-
     }
+
+    override fun onPause() {
+        super.onPause()
+        val currentCount = viewModel.timerValue.value
+        MyPrefs.write(MyPrefs.PREFS_VALUE, currentCount)
+    }
+
 }
 
 @Composable
@@ -233,6 +248,7 @@ fun AskNotificationPermission() {
                 ) == PackageManager.PERMISSION_GRANTED -> {
                     MyLogger.d("Notification permission already granted")
                 }
+
                 ActivityCompat.shouldShowRequestPermissionRationale(
                     (context as Activity),
                     Manifest.permission.POST_NOTIFICATIONS
@@ -241,6 +257,7 @@ fun AskNotificationPermission() {
                     showRationale = true
                     MyLogger.d("User prohibited notification permission")
                 }
+
                 else -> {
                     MyLogger.d("Ask notification permission")
                     permissionLauncher.launch(
@@ -274,3 +291,4 @@ fun AskNotificationPermission() {
         )
     }
 }
+

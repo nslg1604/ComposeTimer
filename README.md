@@ -1,1 +1,1 @@
-Compose application to demonstrate timer
+Composable application to demonstrate timer

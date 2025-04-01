@@ -33,14 +33,16 @@ class MyWorker(context: Context, workerParams: WorkerParameters) :
         var currentCount = count.toInt()
         timerJob = coroutineScope.launch {
             MyLogger.d("MyWorker - doWork - isActive=" + isActive + " currentCount=" + currentCount)
-            while (isActive && WorkerManager.running && currentCount > 0) {
-                delay(1000)
-                currentCount -= 1
-                MyLogger.d("MyWorker - doWork - currentCount=" + currentCount)
+            while (isActive && currentCount > 0) {
+                if (WorkerManager.stop){
+                    MyLogger.d("MyWorker - doWork - STOP")
+                    currentCount = 0
+                }
+                else if (WorkerManager.running){
+                    delay(1000)
+                    currentCount -= 1
+                }
                 WorkerManager.sendTimerUpdate(currentCount)
-//                if (currentCount > 0){
-//                    myNotification.sendNotificationWithSound("Debug - finish", "")
-//                }
             }
         }
 

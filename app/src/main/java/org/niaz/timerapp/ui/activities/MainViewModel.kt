@@ -1,6 +1,7 @@
 package org.niaz.timerapp.ui.activities
 
 import android.content.Context
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.OneTimeWorkRequestBuilder
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.niaz.timerapp.R
 import org.niaz.timerapp.diff.MyLogger
 import org.niaz.timerapp.diff.MyNotification
 import org.niaz.timerapp.timer.MyWorker
@@ -31,12 +33,15 @@ class MainViewModel @Inject constructor
     @Inject lateinit var myNotification: MyNotification
 
     init {
+        val finishText = context.getString(R.string.finish)
         viewModelScope.launch {
             WorkerManager.timerUpdates.collect { seconds ->
                 _timerValue.value = seconds
                 MyLogger.d("MainViewModel - collected seconds=" + seconds)
                 if (seconds == 0){
-                    myNotification.sendNotificationWithSound("Debug - finish", "")
+                    myNotification.sendNotificationWithSound(
+                        finishText, true
+                    )
                 }
             }
         }
@@ -45,7 +50,8 @@ class MainViewModel @Inject constructor
     fun startWorker(count: String) {
         MyLogger.d("MainViewModel - startWorker with count: $count")
         myNotification.createNotificationChannel()
-        myNotification.sendNotificationWithSound("Debug - startWorker", "")
+        WorkerManager.stop = false
+        WorkerManager.running = true
 
         val inputData = workDataOf(
             WorkerManager.COUNT_KEY to count
@@ -64,6 +70,6 @@ class MainViewModel @Inject constructor
         workerId?.let { id ->
             workManager.cancelWorkById(id)
         }
-        WorkerManager.running = false
+        WorkerManager.stop = true
     }
 }

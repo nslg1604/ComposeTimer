@@ -53,17 +53,17 @@ class MyNotification @Inject constructor
         }
     }
 
-    fun sendNotificationWithSound(title: String, message: String) {
+    fun sendNotificationWithSound(message: String, soundOn: Boolean) {
         scope.launch {
             val soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
             val builder = NotificationCompat.Builder(context, channelId)
                 .setSmallIcon(android.R.drawable.ic_dialog_info)
-                .setContentTitle(title)
                 .setContentText(message)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setSound(soundUri)
                 .setAutoCancel(true)
+
+            if (soundOn) builder.setSound(soundUri)
 
             with(NotificationManagerCompat.from(context)) {
                 if (ActivityCompat.checkSelfPermission(
