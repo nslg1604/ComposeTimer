@@ -1,63 +1,40 @@
 package org.niaz.timerapp.timer
 
 import android.content.Context
+import android.content.Intent
+import android.os.Build
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat.startForegroundService
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
+import org.niaz.timerapp.diff.TimerService
 import org.niaz.timerapp.diff.MyLogger
-import org.niaz.timerapp.diff.MyPrefs
 import kotlin.coroutines.CoroutineContext
 
-class MyWorker(context: Context, workerParams: WorkerParameters) :
-    Worker(context, workerParams), CoroutineScope {
-
-    private val job = Job()
-    override val coroutineContext: CoroutineContext = Dispatchers.Default + job
-    val coroutineScope = CoroutineScope(Dispatchers.Default)
-
-    private var timerJob: Job? = null
+class MyWorker(val context: Context, workerParams: WorkerParameters) :
+    Worker(context, workerParams) {
 
     override fun doWork(): Result {
-        var currentCount = MyPrefs.read(MyPrefs.PREFS_VALUE)
-        MyLogger.d("MyWorker - doWork currentCount=" + currentCount)
-        if (currentCount > 0){
-            WorkerManager.started = true
-            WorkerManager.running = true
-        }
+        MyLogger.d("MyWorker - doWork")
+        
+        val serviceIntent = Intent(context, TimerService::class.java)
+        MyLogger.d("MyWorker - doWork intent=" + serviceIntent)
 
-        timerJob = coroutineScope.launch {
-            MyLogger.d("MyWorker - doWork - isActive=" + isActive + " currentCount=" + currentCount)
-            while (isActive && currentCount > 0) {
-                if (!WorkerManager.started){
-                    MyLogger.d("MyWorker - doWork - STOP")
-                    currentCount = 0
-                    WorkerManager.sendTimerUpdate(currentCount)
-                    MyPrefs.write(MyPrefs.PREFS_VALUE, currentCount)
-                }
-                else if (WorkerManager.running){
-                    delay(1000)
-                    currentCount -= 1
-                    WorkerManager.sendTimerUpdate(currentCount)
-                    MyPrefs.write(MyPrefs.PREFS_VALUE, currentCount)
-                }
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            MyLogger.d("MyWorker - doWork api>=26")
+            startForegroundService(context, serviceIntent)
+        } else {
+            MyLogger.d("MyWorker - doWork api<26")
+            context.startService(serviceIntent)
         }
 
         return try {
             Result.success()
         } finally {
-            job.cancel()
         }
     }
 
-    override fun onStopped() {
-        super.onStopped()
-        timerJob?.cancel()
-        job.cancel()
-    }
 }

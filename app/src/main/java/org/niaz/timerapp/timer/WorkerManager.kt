@@ -1,7 +1,9 @@
 package org.niaz.timerapp.timer
 
+import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
+import org.niaz.timerapp.R
 import org.niaz.timerapp.diff.MyLogger
 
 object WorkerManager {
@@ -9,6 +11,7 @@ object WorkerManager {
     @Volatile var running = false
     private val _timerUpdates = MutableSharedFlow<Int>()
     val timerUpdates: SharedFlow<Int> = _timerUpdates
+
 
     suspend fun sendTimerUpdate(seconds: Int) {
         MyLogger.d("WorkerManager - sendTimerUpdate seconds=" + seconds)

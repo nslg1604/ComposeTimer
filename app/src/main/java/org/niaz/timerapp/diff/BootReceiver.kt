@@ -19,6 +19,7 @@ class BootReceiver : BroadcastReceiver() {
             context.startActivity(launchIntent)
 
             var currentCount = MyPrefs.read(MyPrefs.PREFS_VALUE)
+            MyLogger.d("BootReceiver - currentCount=$currentCount")
             if (currentCount > 0) {
                 val workRequest = OneTimeWorkRequestBuilder<MyWorker>()
                     .build()

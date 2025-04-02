@@ -20,14 +20,14 @@ import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 
 class MyNotification @Inject constructor
-    (@ApplicationContext val context: Context):CoroutineScope {
+    (@ApplicationContext val context: Context) :CoroutineScope {
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.Main + job
     private lateinit var job: Job
     val scope = CoroutineScope(Dispatchers.Default)
 
     private val channelId = "sound_notifications"
-    private val notificationId = 1
+    private val notificationId = 3
 
     init {
         createNotificationChannel()
@@ -71,14 +71,7 @@ class MyNotification @Inject constructor
                         Manifest.permission.POST_NOTIFICATIONS
                     ) != PackageManager.PERMISSION_GRANTED
                 ) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
-//                        return
+                    MyLogger.d("!= PackageManager.PERMISSION_GRANTED")
                 }
                 notify(notificationId, builder.build())
             }

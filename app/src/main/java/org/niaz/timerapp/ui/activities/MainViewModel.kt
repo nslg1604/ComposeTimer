@@ -30,7 +30,6 @@ class MainViewModel @Inject constructor
     private val workManager = WorkManager.getInstance(context)
     private var workerId: UUID? = null
 
-//    private val _timerValue = MutableStateFlow(MyPrefs.read(MyPrefs.PREFS_VALUE))
     private val _timerValue = MutableStateFlow(0)
     val timerValue: StateFlow<Int> = _timerValue.asStateFlow()
     @Inject lateinit var myNotification: MyNotification

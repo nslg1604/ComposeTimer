@@ -211,8 +211,6 @@ class MainActivity : ComponentActivity() {
                     textAlign = TextAlign.Center
                 )
             }
-
-
         }
     }
 
