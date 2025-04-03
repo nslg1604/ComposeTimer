@@ -81,7 +81,7 @@ class MainActivity : ComponentActivity() {
             ShowInfo(viewModel, count)
 
             Text(
-                text = "Timer: $timerValue seconds",
+                text = "Timer: $timerValue",
                 fontSize = 30.sp,
                 modifier = Modifier.padding(16.dp)
             )

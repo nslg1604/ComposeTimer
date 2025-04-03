@@ -30,15 +30,15 @@ class MainViewModel @Inject constructor
     private val workManager = WorkManager.getInstance(context)
     private var workerId: UUID? = null
 
-    private val _timerValue = MutableStateFlow(0)
-    val timerValue: StateFlow<Int> = _timerValue.asStateFlow()
+    private val _timerValue = MutableStateFlow("00:00")
+    val timerValue: StateFlow<String> = _timerValue.asStateFlow()
     @Inject lateinit var myNotification: MyNotification
 
     init {
         val finishText = context.getString(R.string.finish)
         viewModelScope.launch {
             WorkerManager.timerUpdates.collect { seconds ->
-                _timerValue.value = seconds
+                _timerValue.value = secondsToMmSs(seconds)
                 MyLogger.d("MainViewModel - collected seconds=" + seconds)
                 if (seconds == 0){
                     myNotification.sendNotificationWithSound(
@@ -47,6 +47,12 @@ class MainViewModel @Inject constructor
                 }
             }
         }
+    }
+
+    fun secondsToMmSs(seconds: Int): String {
+        val minutes = seconds / 60
+        val remainingSeconds = seconds % 60
+        return String.format("%02d:%02d", minutes, remainingSeconds)
     }
 
     fun startWorker(count: Int) {
